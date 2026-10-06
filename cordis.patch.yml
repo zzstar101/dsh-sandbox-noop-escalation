@@ -1,0 +1,15 @@
+# dsh-sandbox-noop-escalation bundle patch
+#
+# Mounted automatically when the package is installed as a profile bundle:
+#
+#   dsh plugin --profile <name> add dsh-sandbox-noop-escalation
+#
+# To restrict the tools it watches, override the row from your own profile
+# cordis.patch.yml:
+#
+#   - id: sandbox-noop-escalation
+#     config:
+#       tools: [bash, pwsh]
+- insert:
+    - id: sandbox-noop-escalation
+      name: dsh-sandbox-noop-escalation

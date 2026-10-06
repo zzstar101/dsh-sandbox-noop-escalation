@@ -1,0 +1,53 @@
+{
+  "name": "dsh-sandbox-noop-escalation",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness plugin: drop sandbox_permissions/justification fields that cannot widen the current sandbox mode, so redundant escalations (common with GPT models) no longer fail with \"not strictly wider\".",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "sandbox",
+    "gpt",
+    "codex"
+  ],
+  "author": "zzstar101",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzstar101/dsh-sandbox-noop-escalation.git"
+  },
+  "homepage": "https://github.com/zzstar101/dsh-sandbox-noop-escalation#readme",
+  "bugs": {
+    "url": "https://github.com/zzstar101/dsh-sandbox-noop-escalation/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "manifestVersion": 1
+  }
+}

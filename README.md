@@ -21,9 +21,13 @@ Before each call to a watched tool runs (on the `tools/pre-execute` hook), the p
 | Call arguments | Action |
 | --- | --- |
 | requested mode equal to or narrower than the current mode | remove `sandbox_permissions` and `justification` |
+| `sandbox_permissions` is `null`, empty, or Codex's `use_default` | remove both fields, in any mode |
+| session already at `danger-full-access` (e.g. Codex's `require_escalated`) | remove both fields: nothing is wider |
 | `justification` without `sandbox_permissions` | remove `justification` |
 | requested mode wider than the current mode | leave unchanged; DSH asks for approval as usual |
-| unknown requested mode, or current mode cannot be resolved | leave unchanged; DSH decides |
+| unknown requested mode below `danger-full-access`, or current mode cannot be resolved | leave unchanged; DSH decides |
+
+Codex's own shell tool uses `use_default` / `require_escalated` / `with_additional_permissions` for the same field, and GPT models sometimes carry those values over. `use_default` and empty values are treated as "no request". The other two are only removed when the session is already unrestricted; in a narrower session they are left for DSH to reject, because guessing how wide they should map would be granting permissions.
 
 It only touches tools whose registered schema advertises DSH's own escalation fields, so third-party tools that reuse the names are ignored. The call is rewritten before it runs, so no failed attempt is spent, and the plugin does not match on error text.
 
@@ -55,7 +59,7 @@ Override it from your profile's `cordis.patch.yml`:
 
 ## Compatibility
 
-Tested with DSH 0.2.0-rc.2 (cordis 4.0.4). It relies on the `tools/pre-execute` hook and the `tools` and `sandboxPolicy` services. If any of them is missing, the plugin does not load; if the policy cannot be resolved, calls pass through unchanged.
+Tested with DSH 0.2.0-rc.2 (cordis 4.0.4). It relies on the `tools/pre-execute` hook and the `tools` and `sandboxPolicy` services. If any of them is missing, the plugin does not load; if the policy cannot be resolved, only empty / `use_default` values are removed and everything else passes through unchanged.
 
 ## Development
 

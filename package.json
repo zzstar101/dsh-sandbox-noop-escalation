@@ -1,6 +1,6 @@
 {
   "name": "dsh-sandbox-noop-escalation",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness plugin: drop sandbox_permissions/justification fields that cannot widen the current sandbox mode, so redundant escalations (common with GPT models) no longer fail with \"not strictly wider\".",
   "type": "module",
   "main": "lib/index.js",

@@ -21,9 +21,13 @@ GPT 系列模型习惯了 Codex 的 shell 工具（它有同名参数），往�
 | 调用参数 | 处理 |
 | --- | --- |
 | 请求的模式等于或窄于当前模式 | 去掉 `sandbox_permissions` 和 `justification` |
+| `sandbox_permissions` 是 `null`、空字符串，或 Codex 的 `use_default` | 不论当前模式，两个字段都去掉 |
+| 会话已经是 `danger-full-access`（例如传了 Codex 的 `require_escalated`） | 两个字段都去掉，因为不存在更宽的模式 |
 | 只有 `justification`，没有 `sandbox_permissions` | 去掉 `justification` |
 | 请求的模式宽于当前模式 | 不改动，DSH 照常请求批准 |
-| 请求的模式无法识别，或当前模式无法获取 | 不改动，交给 DSH 判断 |
+| 当前模式低于 `danger-full-access` 时请求了无法识别的值，或当前模式无法获取 | 不改动，交给 DSH 判断 |
+
+Codex 自己的 shell 工具也用这个字段，取值是 `use_default` / `require_escalated` / `with_additional_permissions`，GPT 模型有时会把这些值带过来。`use_default` 和空值视为“没有请求”。另外两个值只在会话已经不受限制时去掉；在更窄的会话里交给 DSH 拒绝，因为猜测它们该对应多宽的模式，就等于替用户授予权限。
 
 插件只处理在注册时声明了 DSH 自带升权参数的工具，第三方工具即使用了同名参数也不会被改动。改写发生在执行之前，所以不会先失败一次，也不依赖匹配错误文字。
 
@@ -55,7 +59,7 @@ dsh plugin --profile <name> add dsh-sandbox-noop-escalation
 
 ## 兼容性
 
-已在 DSH 0.2.0-rc.2（cordis 4.0.4）上测试。插件依赖 `tools/pre-execute` 钩子以及 `tools`、`sandboxPolicy` 两个服务。缺少其中任何一项时插件不会加载；当前沙箱策略获取失败时，调用原样放行。
+已在 DSH 0.2.0-rc.2（cordis 4.0.4）上测试。插件依赖 `tools/pre-execute` 钩子以及 `tools`、`sandboxPolicy` 两个服务。缺少其中任何一项时插件不会加载；当前沙箱策略获取失败时，只去掉空值和 `use_default`，其余调用原样放行。
 
 ## 开发
 

@@ -62,8 +62,36 @@ describe("classify", () => {
 
   it("keeps unknown requested or current modes for core to judge", () => {
     assert.equal(classify({ sandbox_permissions: "full", justification: "x" }, "read-only").reason, "unknown-requested-mode");
+    assert.equal(classify({ sandbox_permissions: "require_escalated", justification: "x" }, "workspace-write").kind, "keep");
     assert.equal(classify({ sandbox_permissions: "workspace-write", justification: "x" }, undefined).reason, "unknown-current-mode");
     assert.equal(classify({ justification: "x" }, "custom").reason, "unknown-current-mode");
+  });
+
+  it("strips empty values and Codex's use_default in any mode", () => {
+    for (const value of [null, "", "  ", "use_default"]) {
+      for (const mode of ["read-only", "danger-full-access", undefined]) {
+        assert.deepEqual(classify({ sandbox_permissions: value, justification: "x" }, mode), {
+          kind: "strip",
+          keys: ["sandbox_permissions", "justification"],
+          reason: "no-request-value"
+        });
+      }
+    }
+    assert.deepEqual(classify({ sandbox_permissions: "use_default" }, "read-only").keys, ["sandbox_permissions"]);
+  });
+
+  it("strips any request once the session is already at the widest mode", () => {
+    for (const value of ["require_escalated", "with_additional_permissions", "anything"]) {
+      assert.deepEqual(classify({ sandbox_permissions: value, justification: "x" }, "danger-full-access"), {
+        kind: "strip",
+        keys: ["sandbox_permissions", "justification"],
+        reason: "already-widest"
+      });
+    }
+  });
+
+  it("does not treat non-string values other than null as empty", () => {
+    assert.equal(classify({ sandbox_permissions: 0, justification: "x" }, "read-only").kind, "keep");
   });
 });
 
@@ -169,6 +197,8 @@ describe("apply", () => {
     assert.equal((await run({ name: "bash", arguments: args, agent: { session: {} } })).arguments, args);
     await run({ name: "bash", arguments: args, agent: { session: {} } });
     assert.equal(logs.filter(([level]) => level === "warn").length, 1);
+    const empty = await run({ name: "bash", arguments: { command: "x", sandbox_permissions: "use_default" }, agent: { session: {} } });
+    assert.deepEqual(empty.arguments, { command: "x" });
   });
 
   it("registers nothing for an empty tool list", () => {
